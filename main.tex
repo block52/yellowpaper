@@ -1,0 +1,451 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{Block52: A domain specific Layer 2}
+\author{Lucas Cullen}
+\author{lucas@block52.xyz}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Online poker has been a topic of interest among cryptographers for many years. Bruce Schneier, often referred to as "The Grandfather of Cryptography," discussed mental poker in his renowned book Applied Cryptography. Numerous papers have proposed solutions to the problem, yet none have been successfully commercialized. We believe this is due to a combination of technical and economic challenges. This paper presents a novel EVM-compatible Layer 2 solution designed to facilitate peer-to-peer card games. By creating this innovative Layer 2 infrastructure, we aim to address the technical and economic obstacles faced by previous projects and make fully distributed poker a reality on the internet.
+\end{abstract}
+
+\section{Problems}
+
+Web2 based online poker is plagued with problems, from sites Geo Blocking, Black Friday events, insolvency issues and cheating sites.  The use of a cryptocurrency and blockchain solve all these issues.
+
+\subsection{Geo Blocking}
+
+One of the significant challenges facing online poker is geo-blocking. Different countries and regions have varying regulations concerning online gambling. As a result, players from certain jurisdictions may find themselves unable to access poker platforms due to regional restrictions. This fragmentation not only limits the player pool but also hampers the global appeal and accessibility of online poker. Geo-blocking can discourage players who frequently travel or live in regions with stringent online gambling laws, ultimately impacting the growth and sustainability of online poker platforms.
+
+\subsection{Payment Blocking}
+
+Online poker platforms often encounter payment-related issues, ranging from difficulties in depositing and withdrawing funds to the reliability of payment processors. Traditional banking systems and payment gateways may impose restrictions on transactions related to online gambling, leading to delays and added costs for players. Additionally, the lack of seamless, instant payment options can frustrate users and deter them from engaging in online poker. Ensuring smooth and secure financial transactions is crucial for maintaining player trust and satisfaction.
+
+\subsection{Cheating websites}
+
+Another serious problem plaguing online poker is the risk of cheating by inside actors. Employees or associates of poker websites may exploit their access to sensitive information, such as hole cards or game algorithms, to gain an unfair advantage. This type of collusion undermines the integrity of the game and erodes player confidence. Detecting and preventing such fraudulent activities is challenging, requiring robust security measures and transparency from the platform operators.
+
+\subsection{Insolvency}
+
+The financial stability of online poker platforms is a critical concern. Instances of insolvency or financial mismanagement can lead to players losing their deposited funds and winnings. This risk is exacerbated by the relatively unregulated nature of online poker in some jurisdictions. Players need assurance that their money is safe and that they will be able to withdraw their funds without issues. Ensuring financial transparency and regulatory oversight can help mitigate the risk of insolvency and protect players' interests.
+
+\subsection{Shuffling}
+
+Ensuring the fairness of the game is paramount in online poker. One of the key aspects of this is providing proof of shuffling. Players need to trust that the deck is shuffled fairly and that the game outcomes are genuinely random. Traditional online poker platforms often rely on proprietary algorithms for shuffling, which may lack transparency. This can lead to skepticism among players about the fairness of the game. Implementing verifiable and transparent shuffling methods, such as cryptographic shuffling protocols, can enhance trust and provide players with confidence in the integrity of the game.
+
+\section{Network consensus}
+Block 52 is a decentralized domain specific chain... It achieves this through a network of validators, also known as master nodes, which play a crucial role in maintaining the network's integrity and security. However, they're only responsible for the account balance state.  Game validators are run as shards on the network, and sync to the Global state when required, such as entering or existing a game.  Validators achieve consensus through the PoS mechanism, which involves the following steps:
+
+\subsubsection*{Staking}
+Validators must stake a B52 on the Ethereum mainnet deposit contract, the native project token, as collateral. This stake acts as an economic incentive for validators to act honestly and in the best interest of the network.
+
+Validators are selected to propose and validate new blocks based on the amount of B52 they have staked. The selection process is designed to be random but weighted by the stake, ensuring that validators with more at stake have a higher chance of being chosen.
+
+Once selected, validators verify the transactions within a block to ensure they are legitimate and adhere to the network's rules. This involves checking digital signatures, transaction histories, and other critical data.
+
+\subsubsection*{Consensus}
+After validation, the block is proposed to the network. Other validators then verify the block's accuracy. If a majority consensus is reached, the block is added to the blockchain, and the validating validator is rewarded with transaction fees and newly minted tokens.
+
+\subsubsection*{Slashing}
+To maintain network integrity, B52 employs a slashing mechanism. If a validator is found to be acting maliciously or incompetently, a portion of their staked RUNE is forfeited. This serves as a deterrent against dishonest behavior and ensures that validators are motivated to uphold the network's security.
+
+\subsection{Global State}
+
+Master nodes are responsible for the global state of the network.
+
+\subsection{Game State "Shards"}
+
+\subsection{Choosing a master validator}
+
+\begin{itemize}
+    \item \textbf{Validator (V):} An entity that participates in the consensus process by proposing and validating blocks.
+    \item \textbf{Uptime (U):} The percentage of time a validator is online and actively participating in the network.
+    \item \textbf{Capital Staked (S):} The amount of cryptocurrency staked by the validator as collateral.
+\end{itemize}
+
+\subsection{Algorithm Definition}
+
+\subsubsection{Parameters}
+
+\begin{itemize}
+    \item \( U_i \): Uptime of validator \( V_i \) as a percentage.
+    \item \( S_i \): Capital staked by validator \( V_i \).
+    \item \( \alpha \): Weight assigned to uptime (where \( 0 \leq \alpha \leq 1 \)).
+    \item \( \beta \): Weight assigned to capital staked (where \( 0 \leq \beta \leq 1 \)).
+    \item \( R_i \): Ranking score of validator \( V_i \).
+\end{itemize}
+
+\subsubsection{Formula}
+
+The ranking score \( R_i \) for each validator \( V_i \) is calculated using the following formula:
+
+\[
+R_i = \alpha \cdot U_i + \beta \cdot \frac{S_i}{S_{\text{max}}}
+\]
+
+where \( S_{\text{max}} \) is the maximum capital staked by any validator in the network. The weights \( \alpha \) and \( \beta \) must sum to 1, i.e., \( \alpha + \beta = 1 \).
+
+\subsubsection{Normalization}
+
+To ensure that both uptime and staked capital are normalized, we use the following normalization steps:
+
+\begin{enumerate}
+    \item Normalize uptime \( U_i \) to a scale of 0 to 1, where 1 represents 100\% uptime.
+    \item Normalize capital staked \( S_i \) by dividing by \( S_{\text{max}} \), ensuring the value is between 0 and 1.
+\end{enumerate}
+
+\subsubsection{Implementation Steps}
+
+\begin{enumerate}
+    \item \textbf{Collect Data:} Gather the uptime \( U_i \) and capital staked \( S_i \) for each validator \( V_i \).
+    \item \textbf{Determine \( S_{\text{max}} \):} Identify the maximum staked capital \( S_{\text{max}} \) among all validators.
+    \item \textbf{Calculate Scores:} Compute the ranking score \( R_i \) for each validator using the formula.
+    \item \textbf{Rank Validators:} Sort the validators based on their ranking scores \( R_i \) in descending order.
+\end{enumerate}
+
+\subsubsection{Example Calculation}
+
+Assume we have three validators with the following data:
+
+\begin{itemize}
+    \item Validator \( V_1 \): \( U_1 = 95\% \), \( S_1 = 1000 \)
+    \item Validator \( V_2 \): \( U_2 = 90\% \), \( S_2 = 2000 \)
+    \item Validator \( V_3 \): \( U_3 = 85\% \), \( S_3 = 1500 \)
+\end{itemize}
+
+Let \( \alpha = 0.5 \) and \( \beta = 0.5 \).
+
+\begin{itemize}
+    \item Calculate \( S_{\text{max}} = 2000 \)
+    \item Normalize uptime and staked capital:
+    \[
+    U_1 = 0.95, \quad U_2 = 0.90, \quad U_3 = 0.85
+    \]
+    \[
+    \frac{S_1}{S_{\text{max}}} = \frac{1000}{2000} = 0.5, \quad \frac{S_2}{S_{\text{max}}} = 1, \quad \frac{S_3}{S_{\text{max}}} = \frac{1500}{2000} = 0.75
+    \]
+
+    \item Calculate ranking scores:
+    \[
+    R_1 = 0.5 \cdot 0.95 + 0.5 \cdot 0.5 = 0.475 + 0.25 = 0.725
+    \]
+    \[
+    R_2 = 0.5 \cdot 0.90 + 0.5 \cdot 1 = 0.45 + 0.5 = 0.95
+    \]
+    \[
+    R_3 = 0.5 \cdot 0.85 + 0.5 \cdot 0.75 = 0.425 + 0.375 = 0.8
+    \]
+
+    \item Rank validators:
+    \[
+    V_2 (0.95), \quad V_3 (0.8), \quad V_1 (0.725)
+    \]
+\end{itemize}
+
+\section{The PVM}
+The Poker Virtual Machine is a state-based machine facilitates the mechanics of a poker game engine, offering a robust and scalable solution for developers and operators of online poker platforms. By ensuring fairness, transparency, and efficiency, the PVM stands to revolutionize how online poker games are created and managed.
+
+A Poker Virtual Machine is a specialized state machine designed to manage the various states and transitions involved in a poker game. At its core, the PVM is responsible for tracking the game state, handling player actions, dealing cards, managing bets, and determining outcomes based on the rules of poker. The state machine model ensures that every possible state and transition in the game is predefined, allowing for precise control and monitoring of the game's flow.
+
+\subsection{Game State Management}
+\begin{itemize}
+    \item The PVM maintains a comprehensive record of the current game state, which includes information about active players, their chip counts, current bets, and the status of the game (e.g., waiting for bets, dealing cards, showdown).
+    \item By keeping an accurate and up-to-date record of the game state, the PVM ensures that the game progresses smoothly and that all player actions are accounted for.
+\end{itemize}
+
+\subsection{Player Actions}
+\begin{itemize}
+    \item The PVM handles all possible player actions, such as folding, calling, raising, and checking. Each action triggers a state transition, moving the game from one state to the next.
+    \item This structured approach guarantees that player actions are processed in a consistent and fair manner, adhering to the rules of the game.
+\end{itemize}
+
+\subsection{Card Dealing}
+\begin{itemize}
+    \item he PVM incorporates a secure and verifiable method for shuffling and dealing cards. Using cryptographic algorithms, the PVM ensures that the deck is shuffled fairly and that the dealt cards are random and unbiased.
+    \item This transparency in card dealing is crucial for maintaining player trust in the online poker platform.
+\end{itemize}
+
+\subsection{Betting and Pot Management}
+\begin{itemize}
+    \item The PVM tracks all bets made by players, calculates the total pot, and manages the distribution of chips. It ensures that all bets are placed correctly and that the pot is allocated according to the outcomes of the hands.
+    \item Accurate betting and pot management are essential for the financial integrity of the game.
+\end{itemize}
+
+\subsection{Outcome Determination}
+\begin{itemize}
+    \item At the end of each hand, the PVM evaluates the players' hands and determines the winner based on the rules of poker. It then transitions the game state to reflect the conclusion of the hand and prepares for the next round.
+    \item This automated determination of outcomes ensures consistency and fairness in the game's results.
+\end{itemize}
+
+\section{Definition of a deck}
+
+Our deck of cards is defined as such:
+
+\begin{itemize}
+    \item \textbf{Deck of Cards (D):} A sequence of \( n \) unique cards. For a standard deck, \( n = 52 \).
+    \[
+    D = \{C_1, C_2, \ldots, C_{52}\}
+    \]
+
+    \item \textbf{Draw Operation (draw(k)):} The process of removing the top \( k \) cards from the deck.
+    \[
+    \text{draw}(k) : D \rightarrow (D', H)
+    \]
+    where
+    \begin{itemize}
+        \item \( D' \) is the new deck after the draw, consisting of \( n-k \) cards.
+        \item \( H \) is the hand of \( k \) drawn cards.
+    \end{itemize}
+
+    \item \textbf{Cut Operation (cut(p)):} The process of splitting the deck at position \( p \) and swapping the two halves.
+    \[
+    \text{cut}(p) : D \rightarrow D'
+    \]
+    where
+    \begin{itemize}
+        \item \( D' \) is the new deck after the cut, where \( D' = D_{p+1} \| D_1 \).
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Axioms}
+
+\begin{itemize}
+    \item \textbf{Uniqueness of Cards:} Each card in the deck is unique.
+    \[
+    \forall i, j \in [1, 52], \; C_i \neq C_j \text{ if } i \neq j
+    \]
+
+    \item \textbf{Initial Deck Order:} The deck starts in a specific order.
+    \[
+    D = \{C_1, C_2, \ldots, C_{52}\}
+    \]
+\end{itemize}
+
+\subsection*{Proof of Correctness for Draw Operation}
+
+\textbf{Lemma 1:} The draw operation does not alter the uniqueness or the total number of cards in the system.
+
+\begin{itemize}
+    \item \textbf{Initial State:} Let \( D = \{C_1, C_2, \ldots, C_{52}\} \).
+
+    \item \textbf{Operation:} Perform \( \text{draw}(k) \).
+    \[
+    \text{draw}(k) : D \rightarrow (D', H)
+    \]
+    \[
+    D' = \{C_{k+1}, C_{k+2}, \ldots, C_{52}\}
+    \]
+    \[
+    H = \{C_1, C_2, \ldots, C_k\}
+    \]
+
+    \item \textbf{Result:}
+    \begin{itemize}
+        \item \( D' \) and \( H \) are disjoint sets.
+        \item \( |D'| = 52 - k \)
+        \item \( |H| = k \)
+        \item \( |D'| + |H| = 52 \)
+    \end{itemize}
+
+    \item \textbf{Conclusion:} The draw operation maintains the integrity of the deck by ensuring that no cards are duplicated or lost.
+\end{itemize}
+
+\subsection*{Proof of Correctness for Cut Operation}
+
+\textbf{Lemma 2:} The cut operation does not alter the uniqueness or the total number of cards in the deck.
+
+\begin{itemize}
+    \item \textbf{Initial State:} Let \( D = \{C_1, C_2, \ldots, C_{52}\} \).
+
+    \item \textbf{Operation:} Perform \( \text{cut}(p) \).
+    \[
+    \text{cut}(p) : D \rightarrow D'
+    \]
+    \[
+    \text{Split the deck at position } p:
+    \]
+    \[
+    D_1 = \{C_1, C_2, \ldots, C_p\}
+    \]
+    \[
+    D_2 = \{C_{p+1}, C_{p+2}, \ldots, C_{52}\}
+    \]
+    \[
+    \text{Combine } D_2 \text{ and } D_1:
+    \]
+    \[
+    D' = D_2 \| D_1 = \{C_{p+1}, C_{p+2}, \ldots, C_{52}, C_1, C_2, \ldots, C_p\}
+    \]
+
+    \item \textbf{Result:}
+    \begin{itemize}
+        \item \( D' \) is a reordering of \( D \).
+        \item No cards are duplicated or lost.
+        \item \( |D'| = 52 \)
+    \end{itemize}
+
+    \item \textbf{Conclusion:} The cut operation maintains the integrity and uniqueness of the deck.
+\end{itemize}
+
+\subsection*{Combining Operations}
+
+\textbf{Theorem:} The combination of draw and cut operations maintains the integrity of the deck.
+
+\begin{itemize}
+    \item \textbf{Initial State:} Let \( D = \{C_1, C_2, \ldots, C_{52}\} \).
+
+    \item \textbf{Draw Operation:}
+    \[
+    \text{draw}(k) : D \rightarrow (D', H)
+    \]
+    \[
+    D' = \{C_{k+1}, C_{k+2}, \ldots, C_{52}\}
+    \]
+    \[
+    H = \{C_1, C_2, \ldots, C_k\}
+    \]
+
+    \item \textbf{Cut Operation:}
+    \[
+    \text{cut}(p) : D' \rightarrow D''
+    \]
+    \[
+    \text{Split } D' \text{ at position } p:
+    \]
+    \[
+    D_1 = \{C_{k+1}, C_{k+2}, \ldots, C_{k+p}\}
+    \]
+    \[
+    D_2 = \{C_{k+p+1}, C_{k+p+2}, \ldots, C_{52}\}
+    \]
+    \[
+    \text{Combine } D_2 \text{ and } D_1:
+    \]
+    \[
+    D'' = D_2 \| D_1 = \{C_{k+p+1}, C_{k+p+2}, \ldots, C_{52}, C_{k+1}, C_{k+2}, \ldots, C_{k+p}\}
+    \]
+
+    \item \textbf{Result:}
+    \begin{itemize}
+        \item The deck \( D'' \) is a reordering of \( D' \), which is derived from \( D \).
+        \item \( |D''| = 52 - k \)
+        \item No cards are duplicated or lost in either operation.
+    \end{itemize}
+
+    \item \textbf{Conclusion:} The combination of draw and cut operations maintains the integrity, uniqueness, and total number of cards in the deck, ensuring fairness and correctness in the deck's state.
+\end{itemize}
+
+\section{Definition of shuffling}
+Given an array \( A \) of \( n \) elements, the Fisher-Yates shuffle proceeds as follows:
+
+\begin{enumerate}
+    \item For \( i \) from \( n-1 \) down to 1:
+    \begin{enumerate}
+        \item Pick a random integer \( j \) such that \( 0 \leq j \leq i \).
+        \item Swap \( A[i] \) with \( A[j] \).
+    \end{enumerate}
+\end{enumerate}
+
+\subsection*{Proof}
+To prove that the Fisher-Yates shuffle produces a uniformly random permutation of the array \( A \).
+
+\subsection*{Initial Setup}
+Consider an array \( A \) of \( n \) elements. We need to show that after running the Fisher-Yates shuffle, each of the \( n! \) possible permutations of the array is equally likely.
+
+\subsection*{Induction Hypothesis}
+Assume that after \( k \) steps (where \( k \) ranges from \( 0 \) to \( n-1 \)), the first \( n-k \) elements of the array form a uniformly random permutation of these \( n-k \) elements.
+
+\subsection*{Base Case}
+When \( k = 0 \), the first \( n \) elements (i.e., the entire array) are to be shuffled. Initially, no elements are fixed, so we consider the entire array. The hypothesis holds trivially because there are no fixed elements to permute.
+
+\subsection*{Inductive Step}
+Consider the state after \( k \) steps. The first \( n-k \) elements form a uniformly random permutation. At the \( (k+1) \)-th step, the algorithm selects a random index \( j \) such that \( 0 \leq j \leq (n-1-k) \) and swaps \( A[n-1-k] \) with \( A[j] \). For the resulting array to be uniformly random after this step, each element \( A[i] \) (for \( 0 \leq i \leq n-1 \)) must have an equal probability of being in each position.
+
+\subsection*{Uniform Distribution}
+Consider the selection of \( j \) at step \( (k+1) \). Each of the remaining \( n-k \) elements is equally likely to be swapped with \( A[n-1-k] \). Thus, each element in the subset \( A[0] \) to \( A[n-1-k] \) has a \( \frac{1}{n-k} \) chance of being swapped into position \( n-1-k \). Because the previous \( k \) steps ensured a uniform distribution of the first \( n-k \) elements, the swap ensures that \( A[n-1-k] \) is equally likely to be any of these elements, maintaining the uniform randomness.
+
+\subsection*{Final Step}
+After \( n-1 \) steps, the last remaining element is trivially in its correct place, and the entire array has been uniformly shuffled. At each step, the algorithm ensures that each of the remaining elements is equally likely to be in any given position, maintaining uniform randomness.
+
+\section*{Conclusion}
+By induction, after completing all \( n-1 \) steps, each permutation of the array is equally likely. Therefore, the Fisher-Yates shuffle produces a uniformly random permutation of the input array \( A \).
+
+\section{Cut for high card}
+
+\subsection*{Definitions}
+
+\begin{itemize}
+    \item \textbf{High Card Game}: A game where each player draws one card from a shuffled deck, and the player with the highest card wins.
+    \item \textbf{Cutting the Deck}: A process where one player splits the deck into two parts, and the other player chooses one part to be placed on top of the other.
+    \item \textbf{Card Ranks}: The cards are ranked in the following order from highest to lowest: Ace, King, Queen, Jack, 10, 9, 8, 7, 6, 5, 4, 3, 2.
+
+\end{itemize}
+
+\subsection*{Assumptions}
+
+\begin{itemize}
+    \item The deck is a standard 52-card deck with cards in random order due to shuffling.
+    \item The deck is cut by Player A, and the cut point is chosen randomly.
+    \item Player B chooses one of the two resulting parts to place on top of the other, completing the cut.
+\end{itemize}
+
+\subsection*{Proof of Fairness}
+
+\subsubsection*{Randomness of the Deck}
+
+Let the initial shuffled deck be denoted as \( D \). Since \( D \) is randomly shuffled, each card \( c_i \) (where \( i \) is the position of the card) is equally likely to be in any position \( 1 \leq i \leq 52 \).
+
+\subsubsection*{Cutting the Deck}
+
+Player A cuts the deck at a random point \( k \) (where \( 1 \leq k < 52 \)), splitting \( D \) into two parts: \( D_1 = \{c_1, c_2, \ldots, c_k\} \) and \( D_2 = \{c_{k+1}, \ldots, c_{52}\} \).
+
+\subsubsection*{Choosing the Top Part}
+
+Player B then chooses which part \( D_1 \) or \( D_2 \) to place on top. Suppose Player B places \( D_2 \) on top of \( D_1 \).
+
+\subsubsection*{New Deck Order}
+
+The new deck order after the cut is \( D' = \{c_{k+1}, \ldots, c_{52}, c_1, \ldots, c_k\} \).
+
+\subsubsection*{Probability Distribution}
+
+Since the initial deck \( D \) was randomly shuffled, the relative order of cards remains random regardless of the cut point \( k \). The operation of cutting and reassembling the deck preserves the randomness of the deck. Each card \( c_i \) still has an equal probability of being in any position \( 1 \leq i \leq 52 \) in the new deck \( D' \).
+
+\subsubsection*{Fairness of the Draw}
+
+When each player draws one card from the top of the new deck \( D' \), the probability distribution of drawing any specific card remains uniform. Therefore, no player has an advantage or disadvantage based on the cut, as the cut does not alter the fundamental randomness of the deck.
+
+\subsubsection*{Conclusion}
+
+The cut in a high card game, where one player cuts the deck at a random point and the other player chooses which part to place on top, is fair. This process does not affect the uniform probability distribution of drawing any specific card from the deck. Hence, each player has an equal chance of drawing the highest card, ensuring the fairness of the game.
+
+\section{Previous attempts}
+
+\subsection{Virtue Poker}
+
+Simply use the section and subsection commands, as in this example document! With Overleaf, all the formatting and numbering is handled automatically according to the template you've chosen. If you're using the Visual Editor, you can also create new section and subsections via the buttons in the editor toolbar.
+
+\subsection{Coin Poker}
+
+\subsection{References List}
+
+
+\bibliographystyle{alpha}
+\bibliography{sample}
+
+\end{document}
